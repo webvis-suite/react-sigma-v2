@@ -46,6 +46,26 @@ export interface ForceAtlasControlProps {
    * This allows you to customize the render of the button.
    */
   customStopLayout?: ReactNode;
+
+  /**
+   * Ref to the ForceAtlas2 instance
+   * This allows you to start/stop the layout from outside the component
+   */
+  ref?: React.Ref<ForceAtlasRef>;
+}
+
+interface ForceAtlasRef {
+    /**
+     * Start the layout
+     * This allows you to start the layout from outside the component
+    */
+    start: () => void;
+
+    /**
+     * Stop the layout
+     * This allows you to stop the layout from outside the component
+    */
+   stop: () => void;
 }
 
 /**
@@ -62,8 +82,8 @@ export interface ForceAtlasControlProps {
  * See [[ForceAtlasControlProps]] for more information.
  *
  * @category Component
- */
-export const ForceAtlasControl: React.FC<ForceAtlasControlProps> = ({
+*/
+const ForceAtlasControlComponent : React.ForwardRefRenderFunction<ForceAtlasRef, ForceAtlasControlProps> = ({
   id,
   className,
   style,
@@ -71,7 +91,7 @@ export const ForceAtlasControl: React.FC<ForceAtlasControlProps> = ({
   autoRunFor = -1,
   customStopLayout,
   customStartLayout,
-}) => {
+}, ref) => {
   // Get Sigma
   const sigma = useSigma();
   // FA2 Setting
@@ -81,6 +101,21 @@ export const ForceAtlasControl: React.FC<ForceAtlasControlProps> = ({
   const [fa2, setFa2] = useState<FA2LayoutSupervisor | null>(null);
   // Is FA2 is running
   const [fa2IsRunning, setFa2IsRunning] = useState<boolean>(false);
+  // Set up the ref
+  React.useImperativeHandle(ref, () => ({
+    start: () => {
+      setFa2IsRunning(true);
+      if (fa2) {
+        fa2.start();
+      }
+    },
+    stop: () => {
+      setFa2IsRunning(false);
+      if (fa2) {
+        fa2.stop();
+      }
+    },
+  }));
 
   /**
    * Init component when Sigma or component settings change.
@@ -158,3 +193,6 @@ export const ForceAtlasControl: React.FC<ForceAtlasControlProps> = ({
     </div>
   );
 };
+
+export const ForceAtlasControl = React.forwardRef<ForceAtlasRef, ForceAtlasControlProps>(ForceAtlasControlComponent);
+
